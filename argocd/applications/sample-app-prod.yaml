@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app-prod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    # Image Updater - PR-based for prod (no write-back-method here)
+    argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/your-org/sample-app
+    argocd-image-updater.argoproj.io/sample-app.update-strategy: semver
+    # NO write-back-method - Image Updater creates PR via GitHub API
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/gitops-cost-showcase.git
+    targetRevision: main
+    path: apps/sample-app/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sample-app-prod
+  syncPolicy:
+    # Manual sync for production - requires human approval
+    # Or use automated with sync window restrictions
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
