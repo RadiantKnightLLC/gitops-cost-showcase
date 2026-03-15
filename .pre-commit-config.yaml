@@ -1,0 +1,53 @@
+# Pre-commit hooks for GitOps-FinOps Showcase
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  # YAML syntax validation
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+        args: ['-c', '.yamllint.yaml']
+        files: \.(yaml|yml)$
+
+  # Secret detection
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks
+
+  # Kubernetes manifest validation
+  - repo: local
+    hooks:
+      - id: validate-kustomize
+        name: Validate Kustomize builds
+        entry: bash -c 'for dir in apps/sample-app/overlays/*/; do echo "Building $dir"; kustomize build "$dir" > /dev/null || exit 1; done'
+        language: system
+        files: (\.yaml|\.yml)$
+        pass_filenames: false
+
+      - id: validate-labels
+        name: Validate Kubernetes Labels
+        entry: bash scripts/verify-labels.sh
+        language: script
+        files: (\.yaml|\.yml)$
+        pass_filenames: false
+        require_serial: true
+
+      - id: kubeval
+        name: Validate Kubernetes manifests
+        entry: bash -c 'kustomize build apps/sample-app/overlays/dev | kubeval --strict'
+        language: system
+        files: (\.yaml|\.yml)$
+        pass_filenames: false
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-symlinks

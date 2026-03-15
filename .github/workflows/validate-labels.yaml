@@ -1,0 +1,94 @@
+# Validate Kubernetes Labels for FinOps Compliance
+# Ensures all deployments have required pod-template labels for Kubecost
+
+name: Validate Labels
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apps/**'
+      - 'platform/**'
+      - 'argocd/**'
+  push:
+    branches: [main, master]
+    paths:
+      - 'apps/**'
+      - 'platform/**'
+      - 'argocd/**'
+
+jobs:
+  validate-manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+          kustomize version
+
+      - name: Validate Kustomize Builds
+        run: |
+          echo "=== Validating Dev Overlay ==="
+          kustomize build apps/sample-app/overlays/dev > /dev/null
+          echo "✅ Dev overlay builds successfully"
+          
+          echo "=== Validating Prod Overlay ==="
+          kustomize build apps/sample-app/overlays/prod > /dev/null
+          echo "✅ Prod overlay builds successfully"
+
+      - name: Validate Labels in Built Manifests
+        run: |
+          # Build and check for required labels
+          REQUIRED_LABELS=("environment" "team" "cost-center" "owner")
+          
+          for overlay in dev prod; do
+            echo "=== Checking $overlay overlay ==="
+            
+            # Build manifest
+            kustomize build "apps/sample-app/overlays/$overlay" > /tmp/manifest-$overlay.yaml
+            
+            # Check for pod-template labels
+            for label in "${REQUIRED_LABELS[@]}"; do
+              count=$(grep -c "spec:" /tmp/manifest-$overlay.yaml || true)
+              if [ "$count" -eq 0 ]; then
+                echo "❌ No deployments found in $overlay overlay"
+                exit 1
+              fi
+              
+              # Check pod-template has labels
+              template_labels=$(yq '.spec.template.metadata.labels' /tmp/manifest-$overlay.yaml 2>/dev/null || echo "")
+              if [ -z "$template_labels" ] || [ "$template_labels" = "null" ]; then
+                echo "❌ Missing pod-template labels in $overlay"
+                exit 1
+              fi
+              
+              # Check specific label exists
+              label_value=$(yq ".spec.template.metadata.labels.$label" /tmp/manifest-$overlay.yaml 2>/dev/null || echo "")
+              if [ -z "$label_value" ] || [ "$label_value" = "null" ]; then
+                echo "❌ Missing required label '$label' in $overlay pod-template"
+                exit 1
+              fi
+              
+              echo "  ✅ Label '$label': $label_value"
+            done
+          done
+          
+          echo "=== All Label Validation Passed ==="
+
+      - name: Setup kubeval
+        run: |
+          curl -L -o kubeval.tar.gz https://github.com/instrumenta/kubeval/releases/download/0.16.1/kubeval-linux-amd64.tar.gz
+          tar xf kubeval.tar.gz
+          sudo mv kubeval /usr/local/bin/
+
+      - name: Validate Against Kubernetes Schema
+        run: |
+          kustomize build apps/sample-app/overlays/dev | kubeval --strict --kubernetes-version 1.28.0
+          echo "✅ Dev manifests pass Kubernetes schema validation"
+          
+          kustomize build apps/sample-app/overlays/prod | kubeval --strict --kubernetes-version 1.28.0
+          echo "✅ Prod manifests pass Kubernetes schema validation"

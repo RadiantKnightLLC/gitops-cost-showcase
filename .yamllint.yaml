@@ -1,0 +1,41 @@
+# Yamllint configuration for GitOps manifests
+
+yaml-files:
+  - '*.yaml'
+  - '*.yml'
+
+rules:
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+  colons:
+    max-spaces-after: 1
+  commas:
+    max-spaces-after: 1
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: disable
+  document-end: disable
+  document-start: disable
+  empty-lines:
+    max: 2
+  empty-values: disable
+  hyphens:
+    max-spaces-after: 1
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  key-duplicates: enable
+  key-ordering: disable
+  line-length:
+    max: 120
+  new-line-at-end-of-file: enable
+  new-lines:
+    type: unix
+  octal-values: disable
+  quoted-strings: disable
+  trailing-spaces: enable
+  truthy: disable
