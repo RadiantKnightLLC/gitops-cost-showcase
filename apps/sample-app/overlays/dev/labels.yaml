@@ -1,0 +1,26 @@
+# CRITICAL: This patch adds required labels to the POD TEMPLATE
+# Kubecost reads labels from running pods (spec.template.metadata.labels)
+# NOT from Deployment metadata alone!
+#
+# Without these pod-template labels, Kubecost will show:
+# - Namespace costs: ✓ Working (namespace is from pod location)
+# - Label-based costs: ✗ Empty (no labels on pods)
+#
+# Always verify with: kubectl get pods -n sample-app-dev --show-labels
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-app
+spec:
+  template:
+    metadata:
+      labels:
+        # These labels are REQUIRED for Kubecost cost allocation
+        # They MUST be in spec.template.metadata.labels
+        environment: dev
+        team: platform
+        cost-center: agency-rnd
+        owner: agency-internal
+        # Additional metadata
+        app.kubernetes.io/instance: sample-app-dev
+        app.kubernetes.io/version: "1.0.0"

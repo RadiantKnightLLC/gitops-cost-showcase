@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sample-app-prod
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    # Cost allocation metadata
+    kubecost_cost_allocation: "enabled"
+  labels:
+    # Namespace-level labels for cost attribution
+    environment: prod
+    team: platform
+    cost-center: agency-rnd
+    owner: agency-internal
+    # Production-specific labels
+    service-tier: production
+    criticality: high
+    # Kubernetes recommended labels
+    kubernetes.io/metadata.name: sample-app-prod
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

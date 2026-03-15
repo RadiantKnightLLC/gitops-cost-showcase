@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-app
+  labels:
+    app.kubernetes.io/name: sample-app
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: gitops-finops-showcase
+    # NOTE: Additional labels are added by overlays at both metadata and pod-template levels
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sample-app
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: gitops-finops-showcase
+        # CRITICAL: Additional labels (environment, team, cost-center, owner) 
+        # are added by overlays in spec.template.metadata.labels
+        # This is required for Kubecost cost allocation!
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: sample-app
+          image: ghcr.io/your-org/sample-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "8080"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
