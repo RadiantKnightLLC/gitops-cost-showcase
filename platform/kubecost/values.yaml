@@ -1,6 +1,10 @@
 # Kubecost Helm values
 # Reference: https://github.com/kubecost/cost-analyzer-helm-chart
 
+# Cluster identification
+global:
+  clusterId: gitops-finops-showcase
+  
 # Use bundled Prometheus (recommended for showcase)
 prometheus:
   server:

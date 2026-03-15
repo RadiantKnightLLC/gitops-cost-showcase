@@ -14,7 +14,7 @@ data:
   
   # Timeout settings
   timeout.reconciliation: 180s
-  timeout.hard.reconciliation: 0
+  timeout.hard.reconciliation: "0"
   
   # UI customization
   ui.bannercontent: "GitOps-FinOps Showcase"

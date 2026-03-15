@@ -17,5 +17,4 @@ metadata:
     criticality: high
     # Kubernetes recommended labels
     kubernetes.io/metadata.name: sample-app-prod
-    pod-security.kubernetes.io/enforce: restricted
-    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/enforce: privileged

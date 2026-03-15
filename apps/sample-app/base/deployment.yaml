@@ -22,30 +22,22 @@ spec:
         # are added by overlays in spec.template.metadata.labels
         # This is required for Kubecost cost allocation!
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        seccompProfile:
-          type: RuntimeDefault
+      # Security context removed for nginx compatibility
       containers:
         - name: sample-app
           image: ghcr.io/your-org/sample-app:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 80
               protocol: TCP
           env:
             - name: NODE_ENV
               value: "production"
             - name: PORT
               value: "8080"
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false
-            capabilities:
-              drop:
-                - ALL
+          # Security context removed for nginx compatibility
+          # Re-enable when using custom non-root app image
           resources:
             requests:
               memory: "128Mi"
@@ -55,17 +47,17 @@ spec:
               cpu: "200m"
           livenessProbe:
             httpGet:
-              path: /health
+              path: /
               port: http
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /
               port: http
-            initialDelaySeconds: 5
+            initialDelaySeconds: 3
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3

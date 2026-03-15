@@ -9,7 +9,8 @@ resources:
 # Images - Argo CD Image Updater will modify this
 images:
 - name: ghcr.io/your-org/sample-app
-  newTag: latest
+  newName: nginx
+  newTag: alpine
 labels:
 - includeSelectors: true
   pairs:
