@@ -1,0 +1,53 @@
+# Kubecost Budget Alerts Configuration
+# These alerts trigger when costs exceed thresholds
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubecost-budget-alerts
+  namespace: kubecost
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  alerts.json: |
+    [
+      {
+        "type": "budget",
+        "threshold": 80,
+        "window": "1d",
+        "aggregation": "namespace",
+        "filter": "sample-app-dev",
+        "title": "Dev Environment Budget Alert",
+        "description": "Daily spend in sample-app-dev has exceeded 80% of expected budget",
+        "owner": "platform-team@example.com"
+      },
+      {
+        "type": "budget",
+        "threshold": 90,
+        "window": "1d",
+        "aggregation": "namespace",
+        "filter": "sample-app-prod",
+        "title": "Production Environment Budget Alert",
+        "description": "Daily spend in sample-app-prod has exceeded 90% of expected budget",
+        "owner": "platform-team@example.com"
+      },
+      {
+        "type": "budget",
+        "threshold": 25,
+        "window": "1d",
+        "aggregation": "namespace",
+        "filter": "kubecost,argocd,ingress-system,monitoring",
+        "title": "Shared Platform Overhead Alert",
+        "description": "Shared platform overhead has exceeded 25% of total daily spend",
+        "owner": "finops-team@example.com"
+      },
+      {
+        "type": "efficiency",
+        "threshold": 50,
+        "window": "7d",
+        "aggregation": "namespace",
+        "filter": "sample-app-dev",
+        "title": "Dev Resource Efficiency Alert",
+        "description": "Resource efficiency in dev is below 50% - consider rightsizing",
+        "owner": "platform-team@example.com"
+      }
+    ]

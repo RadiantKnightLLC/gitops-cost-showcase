@@ -5,6 +5,7 @@ namespace: kubecost
 
 resources:
   - namespace.yaml
+  - budget-alerts.yaml
   - postsync-job.yaml
 
 helmCharts:
