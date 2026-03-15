@@ -1,0 +1,99 @@
+# Kubecost Helm values
+# Reference: https://github.com/kubecost/cost-analyzer-helm-chart
+
+# Use bundled Prometheus (recommended for showcase)
+prometheus:
+  server:
+    enabled: true
+    persistentVolume:
+      enabled: true
+      size: 32Gi
+      storageClass: ""  # Use default storage class
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+  
+  nodeExporter:
+    enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  
+  # AlertManager (optional, for showcase alerts)
+  alertmanager:
+    enabled: false
+
+# Kubecost Cost Analyzer
+kubecostModel:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+kubecostFrontend:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# Cost allocation configuration
+kubecostProductConfigs:
+  # Currency for cost display
+  currencyCode: "USD"
+  
+  # Idle cost display mode: separate, share, or hide
+  # "separate" makes waste visible (recommended for showcase)
+  defaultIdle: separate
+  
+  # Shared namespace overhead allocation
+  sharedNamespaces: "argocd,kubecost,ingress-system,monitoring"
+  
+  # Label mapping for allocation views
+  labelMappingConfigs:
+    enabled: true
+    owner_label: owner
+    team_label: team
+    department_label: cost-center
+    product_label: app.kubernetes.io/part-of
+    environment_label: environment
+  
+  # Cloud provider integration (placeholder - fill in Phase 4)
+  # awsSpotDataBucket: ""
+  # awsSpotDataRegion: ""
+  # athenaBucketName: ""
+  # athenaRegion: ""
+  # athenaDatabase: ""
+  # athenaTable: ""
+
+# Enable ingress for external access (optional)
+ingress:
+  enabled: false
+  # hosts:
+  #   - kubecost.example.com
+
+# Notifications (Phase 4)
+notifications:
+  alertmanager:
+    enabled: false
+  
+# Savings recommendations
+kubecostSavings:
+  enabled: true
+  
+# Cluster controller for right-sizing
+clusterController:
+  enabled: false

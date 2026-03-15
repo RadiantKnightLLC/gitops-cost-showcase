@@ -1,0 +1,70 @@
+# PostSync Job to verify Kubecost is ready before marking sync complete
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kubecost-health-check
+  namespace: kubecost
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: health-check
+          image: curlimages/curl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=========================================="
+              echo "Kubecost Post-Sync Health Check"
+              echo "=========================================="
+              echo ""
+              
+              # Wait for Kubecost to be ready
+              echo "⏳ Waiting for Kubecost cost-analyzer to be ready..."
+              MAX_RETRIES=30
+              RETRY_COUNT=0
+              
+              until curl -sf http://kubecost-cost-analyzer.kubecost:9090/healthz > /dev/null 2>&1; do
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+                if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+                  echo "❌ Timeout waiting for Kubecost health endpoint"
+                  exit 1
+                fi
+                echo "  Attempt $RETRY_COUNT/$MAX_RETRIES - not ready yet, waiting..."
+                sleep 10
+              done
+              
+              echo "✅ Kubecost health endpoint is responding"
+              echo ""
+              
+              # Test allocation API
+              echo "🧪 Testing allocation API..."
+              ALLOCATION_RESPONSE=$(curl -sf "http://kubecost-cost-analyzer.kubecost:9090/model/allocation?window=1d&aggregate=namespace" 2>/dev/null)
+              
+              if [ $? -eq 0 ] && [ -n "$ALLOCATION_RESPONSE" ]; then
+                echo "✅ Allocation API is responding"
+              else
+                echo "⚠️  Allocation API not fully ready yet (this is OK, data may still be collecting)"
+              fi
+              
+              echo ""
+              echo "=========================================="
+              echo "✅ Kubecost Post-Sync Health Check Complete"
+              echo "=========================================="
+              echo ""
+              echo "Kubecost is ready! Access via:"
+              echo "  kubectl port-forward svc/kubecost-cost-analyzer -n kubecost 9090"
+              echo "  Then open: http://localhost:9090"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+  backoffLimit: 3

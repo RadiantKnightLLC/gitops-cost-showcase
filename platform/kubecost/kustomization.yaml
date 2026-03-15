@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kubecost
+
+resources:
+  - namespace.yaml
+  - postsync-job.yaml
+
+helmCharts:
+  - name: cost-analyzer
+    repo: https://kubecost.github.io/cost-analyzer/
+    version: 2.3.0  # Pin to specific version
+    releaseName: kubecost
+    namespace: kubecost
+    valuesFile: values.yaml
+    includeCRDs: true
