@@ -1,7 +1,7 @@
 # Validate Kubernetes Labels for FinOps Compliance
 # Ensures all deployments have required pod-template labels for Kubecost
 
-name: Validate Labels
+name: Validate Labels v2
 
 on:
   pull_request:
