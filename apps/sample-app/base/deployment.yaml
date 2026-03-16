@@ -25,7 +25,7 @@ spec:
       # Security context removed for nginx compatibility
       containers:
         - name: sample-app
-          image: ghcr.io/RadiantKnightLLC/sample-app:latest
+          image: ghcr.io/RadiantKnightLLC/showcase-app-p1:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

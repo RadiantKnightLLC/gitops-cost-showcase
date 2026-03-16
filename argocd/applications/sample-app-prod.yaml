@@ -6,8 +6,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
     # Image Updater - PR-based for prod (no write-back-method here)
-    argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/RadiantKnightLLC/sample-app
-    argocd-image-updater.argoproj.io/sample-app.update-strategy: semver
+    argocd-image-updater.argoproj.io/image-list: showcase-app-p1=ghcr.io/RadiantKnightLLC/showcase-app-p1
+    argocd-image-updater.argoproj.io/showcase-app-p1.update-strategy: semver
     # NO write-back-method - Image Updater creates PR via GitHub API
   finalizers:
     - resources-finalizer.argocd.argoproj.io

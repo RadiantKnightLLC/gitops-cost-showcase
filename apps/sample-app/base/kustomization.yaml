@@ -13,8 +13,8 @@ commonAnnotations:
 # Images will be updated by Argo CD Image Updater
 # Format: name=newName:newTag
 images:
-- name: sample-app
-  newName: ghcr.io/RadiantKnightLLC/sample-app
+- name: showcase-app-p1
+  newName: ghcr.io/RadiantKnightLLC/showcase-app-p1
   newTag: latest
 labels:
 - includeSelectors: true
