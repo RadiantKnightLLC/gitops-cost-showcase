@@ -17,6 +17,7 @@ on:
       - 'apps/**'
       - 'platform/**'
       - 'argocd/**'
+  workflow_dispatch:
 
 jobs:
   validate-manifests:
