@@ -1,7 +1,8 @@
 # Validate Kubernetes Labels for FinOps Compliance
 # Ensures all deployments have required pod-template labels for Kubecost
+# Updated: Removed kubeval (project archived), using kubectl dry-run instead
 
-name: Validate Labels v2
+name: Validate Kubernetes Labels
 
 on:
   pull_request:
