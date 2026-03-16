@@ -8,7 +8,7 @@ resources:
 # Labels applied to all resources in this overlay
 # Images - Argo CD Image Updater will modify this via PR
 images:
-- name: ghcr.io/your-org/sample-app
+- name: ghcr.io/RadiantKnightLLC/sample-app
   newName: nginx
   newTag: alpine
 labels:
@@ -21,3 +21,4 @@ labels:
 patches:
 - path: labels.yaml
 - path: patches.yaml
+

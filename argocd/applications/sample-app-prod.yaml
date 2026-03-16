@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
     # Image Updater - PR-based for prod (no write-back-method here)
-    argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/your-org/sample-app
+    argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/RadiantKnightLLC/sample-app
     argocd-image-updater.argoproj.io/sample-app.update-strategy: semver
     # NO write-back-method - Image Updater creates PR via GitHub API
   finalizers:
@@ -14,7 +14,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/gitops-cost-showcase.git
+    repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
     targetRevision: main
     path: apps/sample-app/overlays/prod
   destination:
@@ -33,3 +33,4 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
+

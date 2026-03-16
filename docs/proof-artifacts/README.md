@@ -58,7 +58,7 @@ sample-app-dev:     sync-wave: "2"
 sample-app-prod:    sync-wave: "2"
 
 # Image Updater (Dev)
-argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/your-org/sample-app
+argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/RadiantKnightLLC/sample-app
 argocd-image-updater.argoproj.io/sample-app.update-strategy: newest-build
 
 # Image Updater (Prod)
@@ -125,3 +125,4 @@ kubectl get configmap kubecost-budget-alerts -n kubecost
 - [Labels Policy](../labels-policy.md)
 - [Sync Wave Validation](../sync-wave-validation.md)
 - [Cloud Billing Setup](../cloud-billing-setup.md)
+

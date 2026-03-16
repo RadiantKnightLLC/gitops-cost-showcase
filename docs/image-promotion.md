@@ -20,7 +20,7 @@ CI Build → Container Registry → Image Updater → Git Commit → Argo CD Syn
 **Configuration:**
 ```yaml
 annotations:
-  argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/your-org/sample-app
+  argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/RadiantKnightLLC/sample-app
   argocd-image-updater.argoproj.io/sample-app.update-strategy: newest-build
   argocd-image-updater.argoproj.io/write-back-method: git
   argocd-image-updater.argoproj.io/git-branch: main
@@ -40,7 +40,7 @@ CI Build (semver tag) → Container Registry → Image Updater → GitHub PR →
 **Configuration:**
 ```yaml
 annotations:
-  argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/your-org/sample-app
+  argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/RadiantKnightLLC/sample-app
   argocd-image-updater.argoproj.io/sample-app.update-strategy: semver
   # NO write-back-method - Image Updater creates PR via GitHub API
 ```
@@ -169,3 +169,4 @@ See:
 - Token has minimal permissions (repo scope only)
 - Production requires human approval (PR review)
 - Audit trail via Git history
+

@@ -10,7 +10,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/your-org/gitops-cost-showcase.git
+    repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
     targetRevision: main
     path: platform/kubecost
     helm:
@@ -26,3 +26,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
+
