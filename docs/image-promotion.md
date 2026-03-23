@@ -163,10 +163,29 @@ See:
 
 3. Verify Git user/email configuration
 
+## Rollback Procedures
+
+If a promoted image causes issues, see [Rollback Runbook](./rollback-runbook.md) for detailed recovery procedures.
+
+### Quick Rollback Commands
+
+```bash
+# Dev: Revert to previous image
+argocd app rollback sample-app-dev <revision-id>
+
+# Prod: Revert kustomization and sync
+kubectl apply -f apps/sample-app/overlays/prod/
+argocd app sync sample-app-prod
+
+# Or use direct kubectl
+kubectl rollout undo deployment/prod-sample-app -n sample-app-prod
+```
+
 ## Security Considerations
 
 - GitHub token stored as Kubernetes secret
 - Token has minimal permissions (repo scope only)
 - Production requires human approval (PR review)
 - Audit trail via Git history
+- All images scanned by Trivy before deployment (see `.github/workflows/security-scan.yaml`)
 

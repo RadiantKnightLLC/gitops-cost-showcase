@@ -1,0 +1,123 @@
+# Validate Sync Waves in Kubernetes Manifests
+# Ensures all resources have proper sync-wave annotations for ordered deployment
+---
+name: Validate Sync Waves
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - '**.yaml'
+      - '**.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - '**.yaml'
+      - '**.yml'
+  workflow_dispatch:
+
+env:
+  MIN_SYNC_WAVE: -2
+  MAX_SYNC_WAVE: 2
+
+jobs:
+  validate-sync-waves:
+    name: Validate Sync Wave Annotations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          wget -qO /tmp/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          chmod +x /tmp/yq
+          sudo mv /tmp/yq /usr/local/bin/yq
+
+      - name: Validate sync-wave annotations
+        run: |
+          #!/bin/bash
+          set -e
+          
+          ERRORS=0
+          
+          # Find all YAML files in argocd/, apps/, and platform/
+          FILES=$(find argocd/ apps/ platform/ -name "*.yaml" -o -name "*.yml" 2>/dev/null || true)
+          
+          if [ -z "$FILES" ]; then
+            echo "ℹ️ No YAML files found in monitored directories"
+            exit 0
+          fi
+          
+          for file in $FILES; do
+            # Skip kustomization.yaml files
+            if [[ "$(basename $file)" == "kustomization.yaml" ]]; then
+              continue
+            fi
+            
+            # Check if file has metadata.annotations
+            HAS_ANNOTATIONS=$(yq eval 'has("metadata") and .metadata | has("annotations")' "$file" 2>/dev/null || echo "false")
+            
+            if [ "$HAS_ANNOTATIONS" != "true" ]; then
+              echo "⚠️  $file: Missing metadata.annotations"
+              continue
+            fi
+            
+            # Get sync-wave annotation
+            SYNC_WAVE=$(yq eval '.metadata.annotations.["argocd.argoproj.io/sync-wave"] // ""' "$file" 2>/dev/null || echo "")
+            
+            if [ -z "$SYNC_WAVE" ]; then
+              # Check if this is a namespace or critical infrastructure resource
+              KIND=$(yq eval '.kind // ""' "$file" 2>/dev/null | tr '[:upper:]' '[:lower:]')
+              
+              if [[ "$KIND" == "namespace" ]] || [[ "$file" == *namespace*.yaml ]]; then
+                echo "❌ $file: Namespace MUST have sync-wave annotation (recommended: -2)"
+                ERRORS=$((ERRORS + 1))
+              elif [[ "$file" == argocd/* ]] || [[ "$file" == platform/argocd/* ]]; then
+                echo "❌ $file: Argo CD resource SHOULD have sync-wave annotation"
+                ERRORS=$((ERRORS + 1))
+              else
+                echo "⚠️  $file: Missing sync-wave annotation (optional for this resource)"
+              fi
+            else
+              # Validate sync-wave is within acceptable range
+              if ! [[ "$SYNC_WAVE" =~ ^-?[0-9]+$ ]]; then
+                echo "❌ $file: Invalid sync-wave value '$SYNC_WAVE' (must be integer)"
+                ERRORS=$((ERRORS + 1))
+              elif [ "$SYNC_WAVE" -lt "$MIN_SYNC_WAVE" ] || [ "$SYNC_WAVE" -gt "$MAX_SYNC_WAVE" ]; then
+                echo "❌ $file: Sync-wave $SYNC_WAVE out of range [$MIN_SYNC_WAVE, $MAX_SYNC_WAVE]"
+                ERRORS=$((ERRORS + 1))
+              else
+                echo "✅ $file: sync-wave=$SYNC_WAVE"
+              fi
+            fi
+          done
+          
+          if [ $ERRORS -gt 0 ]; then
+            echo ""
+            echo "❌ Validation failed with $ERRORS error(s)"
+            echo ""
+            echo "Sync Wave Guidelines:"
+            echo "  -2: Namespaces, RBAC, CRDs"
+            echo "  -1: ConfigMaps, Secrets"
+            echo "   0: Core services (default)"
+            echo "   1: Applications, middleware"
+            echo "   2: Workloads, jobs"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All sync-wave annotations validated successfully"
+
+      - name: Generate sync-wave report
+        if: always()
+        run: |
+          echo "## Sync Wave Validation Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Sync Wave | Resource Type | Purpose |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| -2 | Namespaces, RBAC, CRDs | Foundation infrastructure |" >> $GITHUB_STEP_SUMMARY
+          echo "| -1 | ConfigMaps, Secrets | Configuration |" >> $GITHUB_STEP_SUMMARY
+          echo "| 0 | Core services | Default wave |" >> $GITHUB_STEP_SUMMARY
+          echo "| 1 | Applications | Middleware |" >> $GITHUB_STEP_SUMMARY
+          echo "| 2 | Workloads | Final deployment |" >> $GITHUB_STEP_SUMMARY
