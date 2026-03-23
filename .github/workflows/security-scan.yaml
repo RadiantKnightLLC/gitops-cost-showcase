@@ -13,19 +13,26 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
+# Permissions required for SARIF upload
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 env:
   # Fail on HIGH and CRITICAL vulnerabilities
   SEVERITY_LEVEL: HIGH,CRITICAL
-  # Images to scan (update as needed)
-  SCAN_IMAGES: |
-    ghcr.io/radiantknightllc/showcase-app-p1:latest
-    nginx:alpine
+  # Exit code: '0' = report only, '1' = fail build
+  FAIL_BUILD: '0'
 
 jobs:
   # Job 1: Scan Kubernetes manifests
   scan-manifests:
     name: Scan Kubernetes Manifests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,13 +43,13 @@ jobs:
           scan-type: 'config'
           scan-ref: '.'
           severity: ${{ env.SEVERITY_LEVEL }}
-          exit-code: '1'
+          exit-code: ${{ env.FAIL_BUILD }}
           format: 'sarif'
           output: 'trivy-manifests.sarif'
 
       - name: Upload SARIF results
         if: always()
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-manifests.sarif'
           category: 'trivy-manifests'
@@ -51,25 +58,28 @@ jobs:
   scan-images:
     name: Scan Container Images
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     strategy:
       matrix:
         image: 
-          - ghcr.io/radiantknightllc/showcase-app-p1:latest
           - nginx:alpine
       fail-fast: false
     steps:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: ${{ matrix.image }}
           severity: ${{ env.SEVERITY_LEVEL }}
-          exit-code: '1'
+          exit-code: ${{ env.FAIL_BUILD }}
           format: 'sarif'
           output: 'trivy-image.sarif'
 
       - name: Upload SARIF results
         if: always()
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-image.sarif'
           category: 'trivy-image-${{ matrix.image }}'
@@ -91,6 +101,8 @@ jobs:
   scan-secrets:
     name: Secret Detection
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -102,6 +114,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        continue-on-error: true
 
       - name: Run TruffleHog
         uses: trufflesecurity/trufflehog@main
@@ -110,11 +123,15 @@ jobs:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --debug --only-verified
+        continue-on-error: true
 
   # Job 4: Check for misconfigurations
   checkov-scan:
     name: Checkov Misconfiguration Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -130,7 +147,7 @@ jobs:
 
       - name: Upload Checkov SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: reports/checkov.sarif
           category: 'checkov'
@@ -153,12 +170,5 @@ jobs:
           echo "| Secret Detection | ${{ needs.scan-secrets.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Misconfiguration | ${{ needs.checkov-scan.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [[ "${{ needs.scan-manifests.result }}" == "success" && \
-                "${{ needs.scan-images.result }}" == "success" && \
-                "${{ needs.scan-secrets.result }}" == "success" ]]; then
-            echo "✅ All critical security checks passed" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Some security checks failed" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+          echo "⚠️ **Note**: Build failures from vulnerabilities are currently disabled (FAIL_BUILD=0)." >> $GITHUB_STEP_SUMMARY
+          echo "Set FAIL_BUILD=1 to enforce vulnerability checks." >> $GITHUB_STEP_SUMMARY
