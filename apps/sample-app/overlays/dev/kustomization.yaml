@@ -9,8 +9,8 @@ resources:
 # Images - Argo CD Image Updater will modify this
 images:
 - name: ghcr.io/RadiantKnightLLC/showcase-app-p1
-  newName: nginx
-  newTag: alpine
+  newName: showcase-app-p1
+  newTag: local
 labels:
 - includeSelectors: true
   pairs:
