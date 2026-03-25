@@ -1,106 +1,58 @@
-# Sync Wave Validation Report
+# Sync Wave Validation
 
-## Overview
-
-This document validates the sync wave ordering for the GitOps-FinOps showcase.
+Validates deployment ordering for the GitOps-FinOps showcase.
 
 ## Sync Wave Assignments
 
-| Wave | Resources | Dependencies | Status |
-|------|-----------|--------------|--------|
-| **-2** | Namespaces | None (root) | ✅ |
-| **-1** | CRDs, RBAC | Wave -2 | ✅ |
-| **0** | Argo CD, Kubecost | Wave -1 | ✅ |
-| **1** | Shared platform (ingress), App-of-Apps | Wave 0 | ✅ |
-| **2** | Application workloads | Wave 1 | ✅ |
+| Wave | Resources | Dependencies |
+|------|-----------|--------------|
+| **-2** | Namespaces | None |
+| **-1** | RBAC, ConfigMaps | Wave -2 |
+| **0** | Argo CD, Kubecost | Wave -1 |
+| **1** | App-of-Apps | Wave 0 |
+| **2** | Applications | Wave 1 |
 
 ## Resource Mapping
 
 ### Wave -2: Namespaces
 ```yaml
-platform/namespaces/argocd.yaml          # Argo CD control plane
-platform/namespaces/kubecost.yaml        # Cost monitoring
-platform/namespaces/ingress-system.yaml  # Ingress controller
-platform/namespaces/monitoring.yaml      # Monitoring stack
-apps/sample-app/overlays/dev/namespace.yaml   # Dev app namespace
-apps/sample-app/overlays/prod/namespace.yaml  # Prod app namespace
+platform/namespaces/argocd.yaml
+platform/namespaces/kubecost.yaml
+apps/sample-app/overlays/dev/namespace.yaml
+apps/sample-app/overlays/prod/namespace.yaml
 ```
 
-### Wave -1: RBAC & Config
+### Wave -1: RBAC
 ```yaml
-platform/argocd/argocd-rbac-cm.yaml      # Argo CD RBAC policies
-platform/argocd/argocd-cm.yaml           # Argo CD configuration
+platform/argocd/argocd-rbac-cm.yaml
+platform/argocd/argocd-cm.yaml
 ```
 
-### Wave 0: Platform Services
+### Wave 0: Platform
 ```yaml
-platform/kubecost/                      # Kubecost installation
-  - namespace.yaml (also wave -2)
-  - Helm chart via kustomization
-  
-# Argo CD itself is installed separately (not in this repo)
-```
-
-### Wave 1: Shared Infrastructure
-```yaml
-argocd/app-of-apps.yaml                 # Parent Application
-platform/shared/ingress-nginx.yaml      # Ingress placeholder
+platform/kubecost/  # Helm chart
 ```
 
 ### Wave 2: Applications
 ```yaml
-argocd/applications/sample-app-dev.yaml   # Dev application
-argocd/applications/sample-app-prod.yaml  # Prod application
-argocd/applications/kubecost.yaml         # Kubecost Application
+argocd/applications/sample-app-dev.yaml
+argocd/applications/sample-app-prod.yaml
 ```
 
 ## Dependency Graph
 
 ```
-Wave -2 (Namespaces)
+Namespaces (-2)
     │
     ▼
-Wave -1 (RBAC/CRDs)
+RBAC (-1)
     │
-    ├───► Wave 0 (Kubecost)
-    │         │
-    │         └───► PostSync Hook (Health Check)
+    ├───► Kubecost (0)
     │
-    └───► Wave 1 (App-of-Apps)
-              │
-              └───► Wave 2 (Applications)
-                        ├───► sample-app-dev
-                        └───► sample-app-prod
+    └───► Applications (2)
 ```
 
-## Critical Path Analysis
-
-Longest dependency chain:
-```
-Namespaces (-2) → RBAC (-1) → Kubecost (0) → PostSync (0) → App-of-Apps (1) → Applications (2)
-```
-
-**Total stages:** 6  
-**Estimated time:** 3-5 minutes for full bootstrap
-
-## Race Conditions Identified
-
-| Potential Issue | Mitigation | Status |
-|----------------|------------|--------|
-| Kubecost before namespace | Namespace at wave -2, Kubecost at wave 0 | ✅ Resolved |
-| Apps before Kubecost ready | PostSync hook on Kubecost | ✅ Resolved |
-| Ingress before apps | Ingress at wave 1, apps at wave 2 | ✅ Resolved |
-
-## PostSync Hook Verification
-
-The Kubecost PostSync Job ensures:
-1. Cost-analyzer pod is ready
-2. Health endpoint responds (HTTP 200)
-3. Allocation API is accessible
-
-This prevents Argo CD from reporting "Synced" before Kubecost is actually usable.
-
-## Validation Commands
+## Validation
 
 ```bash
 # Check sync wave annotations
@@ -111,20 +63,14 @@ argocd app list
 
 # Check Kubecost readiness
 kubectl get pods -n kubecost
-kubectl logs -n kubecost job/kubecost-health-check
 ```
 
 ## Bootstrap Sequence
 
-1. Apply wave -2: `kubectl apply -f platform/namespaces/`
-2. Apply wave -1: `kubectl apply -f platform/argocd/`
-3. Apply wave 0: `kubectl apply -f platform/kubecost/`
-4. Wait for Kubecost PostSync to complete
-5. Apply wave 1: `kubectl apply -f argocd/app-of-apps.yaml`
-6. Let App-of-Apps apply wave 2 automatically
-
-## Notes
-
-- Sync waves ensure deterministic ordering
-- PostSync hook adds safety for critical services
-- App-of-Apps pattern simplifies wave 2 management
+```bash
+# Apply in order
+kubectl apply -f platform/namespaces/          # Wave -2
+kubectl apply -f platform/argocd/              # Wave -1
+kubectl apply -f platform/kubecost/            # Wave 0
+kubectl apply -f argocd/applications/          # Wave 2
+```

@@ -1,91 +1,68 @@
-# GitOps-FinOps Showcase - Proof Artifacts
+# Proof Artifacts
 
-> **Captured**: [YYYY-MM-DD]  
-> **Captured by**: [Agent/User Name]  
-> **Retention Window**: Within 15-day Kubecost free tier limit
-
----
-
-## Overview
-
-This directory contains screenshot evidence demonstrating a fully operational GitOps-FinOps integration with Argo CD and Kubecost.
+Screenshot evidence of GitOps-FinOps showcase.
 
 ---
 
 ## Artifact Index
 
-### Group A: Argo CD GitOps Workflow
+### Argo CD GitOps
 
-| File | Description | Verification Points |
-|------|-------------|---------------------|
-| `01-argocd-apps-list.png` | Argo CD Applications grid view | ✅ App-of-Apps, sample-app-dev, sample-app-prod all healthy |
-| `02-argocd-app-of-apps-detail.png` | App-of-Apps tree view with sync waves | ✅ Sync waves (-2 to +2) visible, child apps healthy |
-| `03-argocd-sample-app-dev-detail.png` | Sample app dev detailed view | ✅ Auto-sync enabled, Image Updater annotations, sync-wave on Deployment |
+| File | Description | Verification |
+|------|-------------|--------------|
+| `01-argocd-apps-list.png` | Applications dashboard | All apps healthy and synced |
+| `02-argocd-sample-app-detail.png` | App detail with resources | Tree view showing deployment flow |
 
-### Group B: Kubecost Cost Allocation
+### Kubecost FinOps
 
-| File | Description | Verification Points |
-|------|-------------|---------------------|
-| `04-kubecost-namespace-view.png` | Cost allocation by namespace | ✅ sample-app-dev, sample-app-prod, kubecost, argocd visible |
-| `05-kubecost-by-environment-label.png` | Cost allocation by environment label | ✅ dev/prod breakdown, idle costs separate |
-| `06-kubecost-all-four-labels.png` | All required labels verified | ✅ environment, team, cost-center, owner all mapped |
+| File | Description | Verification |
+|------|-------------|--------------|
+| `03-kubecost-overview.png` | Cost overview | Namespace costs visible |
+| `04-kubecost-allocations.png` | Allocation by namespace | dev/prod breakdown |
+| `05-kubecost-savings.png` | Savings recommendations | Potential savings identified |
 
-### Group C: Idle Costs & Budget Alerts
+### Working Application
 
-| File | Description | Verification Points |
-|------|-------------|---------------------|
-| `07-kubecost-idle-separate-mode.png` | Idle costs in separate mode | ✅ Idle row visible (proves `defaultIdle: separate` config) |
-| `08-kubecost-savings-recommendations.png` | Savings recommendations view | ✅ Efficiency insights available |
-| `09-kubecost-budget-alerts-config.png` | Budget alerts configuration | ✅ 4 alerts: Dev 80%, Prod 90%, Shared 25%, Efficiency 50% |
-
-### Group D: GitOps-FinOps Integration
-
-| File | Description | Verification Points |
-|------|-------------|---------------------|
-| `10-kubecost-label-mapping-config.png` | Kubecost label mapping settings | ✅ environment, owner, team, cost-center, product labels mapped |
-| `11-gitops-finops-dashboard-composite.png` | Side-by-side GitOps + FinOps view | ✅ Complete integration demonstrated |
+| File | Description |
+|------|-------------|
+| `06-tictactoe-app.png` | Tic-Tac-Toe game running |
 
 ---
 
-## Key Configurations Demonstrated
+## Key Configurations
 
 ### Argo CD
 
 ```yaml
-# Sync Wave Configuration
-app-of-apps:        sync-wave: "1"
-sample-app-dev:     sync-wave: "2"
-sample-app-prod:    sync-wave: "2"
+# Sync waves ensure ordering
+sync-wave: "-2"  # Namespaces
+sync-wave: "2"   # Applications
 
-# Image Updater (Dev)
-argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/RadiantKnightLLC/sample-app
-argocd-image-updater.argoproj.io/sample-app.update-strategy: newest-build
-
-# Image Updater (Prod)
-argocd-image-updater.argoproj.io/sample-app.update-strategy: semver
+# Auto-sync for dev
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
 ```
 
 ### Kubecost
 
 ```yaml
-# Idle Cost Mode
-kubecostProductConfigs:
-  defaultIdle: separate  # Makes waste visible
+# Idle costs visible (not hidden)
+defaultIdle: separate
 
-# Label Mapping
-kubecostProductConfigs:
-  labelMappingConfigs:
-    enabled: true
-    owner_label: owner
-    team_label: team
-    department_label: cost-center
-    environment_label: environment
+# Labels mapped
+labelMappingConfigs:
+  environment_label: environment
+  team_label: team
+  cost-center_label: cost-center
+  owner_label: owner
 ```
 
-### Required Labels (All Present)
+### Required Labels
 
-| Label | Value (Dev) | Value (Prod) |
-|-------|-------------|--------------|
+| Label | Dev Value | Prod Value |
+|-------|-----------|------------|
 | environment | dev | prod |
 | team | platform | platform |
 | cost-center | agency-rnd | agency-rnd |
@@ -93,36 +70,29 @@ kubecostProductConfigs:
 
 ---
 
-## Validation Commands
+## Verification
 
 ```bash
-# Verify Argo CD health
+# Argo CD
 argocd app list
 
-# Verify Kubecost data
+# Kubecost
 curl "http://localhost:9090/model/allocation?window=7d&aggregate=namespace"
 
-# Verify pod labels
+# Labels
 kubectl get pods -n sample-app-dev --show-labels
-kubectl get pods -n sample-app-prod --show-labels
-
-# Verify budget alerts
-kubectl get configmap kubecost-budget-alerts -n kubecost
 ```
 
 ---
 
-## Retention Notice
+## Retention
 
-> ⚠️ **Kubecost Free Tier**: Data retention is limited to 15 days.
-> These screenshots must be re-captured if the deployment age exceeds this window.
+> ⚠️ Kubecost Free tier: 15-day retention. Re-capture if deployment age exceeds this window.
 
 ---
 
-## Related Documentation
+## Related
 
+- [Capture Guide](./CAPTURE-GUIDE.md)
 - [Cost Model](../cost-model.md)
 - [Labels Policy](../labels-policy.md)
-- [Sync Wave Validation](../sync-wave-validation.md)
-- [Cloud Billing Setup](../cloud-billing-setup.md)
-
