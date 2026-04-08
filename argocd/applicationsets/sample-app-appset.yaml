@@ -20,10 +20,13 @@ spec:
       name: 'sample-app-{{ .path.basename }}'
       annotations:
         argocd.argoproj.io/sync-wave: "2"
-        # Image Updater annotations per environment
-        argocd-image-updater.argoproj.io/image-list: showcase-app-p1=ghcr.io/RadiantKnightLLC/showcase-app-p1
-        # Dev: Auto-promote newest build
-        # Prod: Semver with PR-based updates (manual sync policy)
+        # Image Updater: Track showcase-app-p1 image
+        argocd-image-updater.argoproj.io/image-list: showcase-app-p1=ghcr.io/radiantknightllc/showcase-app-p1
+        # Update strategy: newest-build for dev, semver for prod
+        argocd-image-updater.argoproj.io/showcase-app-p1.update-strategy: newest-build
+        # Write back to Git (requires IMAGE_UPDATER_TOKEN secret)
+        argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/image-updater-git-credentials
+        argocd-image-updater.argoproj.io/git-branch: master
       finalizers:
         - resources-finalizer.argocd.argoproj.io
     spec:

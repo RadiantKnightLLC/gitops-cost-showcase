@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: argocd
+data:
+  # Log level
+  log.level: debug
+  
+  # Git configuration for write-back
+  git.username: "ArgoCD Image Updater"
+  git.email: "argocd-image-updater@example.com"
+  
+  # Enable git write-back method
+  git.write-method: "git"
+  
+  # Registries configuration
+  registries: |
+    - name: GHCR
+      api_url: https://ghcr.io
+      prefix: ghcr.io
+      credentials: secret:argocd/ghcr-credentials
+      default: true

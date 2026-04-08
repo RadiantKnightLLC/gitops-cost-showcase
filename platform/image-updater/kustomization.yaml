@@ -1,15 +1,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: argocd
 
 resources:
-  # Argo CD Image Updater installation
-  # Using the official installation manifest
-  - https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/v0.12.2/manifests/install.yaml
+  - image-updater-config.yaml
 
-patches:
-  # Patch to add Git write-back credentials
-  - path: patch-credentials.yaml
-    target:
-      kind: Deployment
-      name: argocd-image-updater
+# Git credentials secret for write-back
+# Create this secret manually:
+# kubectl create secret generic image-updater-git-credentials \
+#   --from-literal=username=<github-username> \
+#   --from-literal=password=<github-pat> \
+#   -n argocd
