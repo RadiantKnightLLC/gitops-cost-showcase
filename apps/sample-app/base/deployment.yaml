@@ -22,22 +22,22 @@ spec:
         # are added by overlays in spec.template.metadata.labels
         # This is required for Kubecost cost allocation!
     spec:
-      # Security context removed for nginx compatibility
+      volumes:
+        - name: app-content
+          configMap:
+            name: sample-app-content
       containers:
         - name: sample-app
-          image: ghcr.io/RadiantKnightLLC/showcase-app-p1:latest
+          image: nginx:alpine
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 80
               protocol: TCP
-          env:
-            - name: NODE_ENV
-              value: "production"
-            - name: PORT
-              value: "8080"
-          # Security context removed for nginx compatibility
-          # Re-enable when using custom non-root app image
+          volumeMounts:
+            - name: app-content
+              mountPath: /usr/share/nginx/html
+              readOnly: true
           resources:
             requests:
               memory: "128Mi"
@@ -61,4 +61,3 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
-
