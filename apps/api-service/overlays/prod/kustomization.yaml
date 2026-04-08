@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: api-service-prod
+namePrefix: prod-
+resources:
+- namespace.yaml
+- ../../base
+labels:
+- includeSelectors: true
+  pairs:
+    environment: prod
+    cost-center: agency-rnd
+    owner: agency-internal
+    team: platform
+patches:
+- target:
+    kind: Deployment
+    name: api-service
+  patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 3
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: 100m
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: 128Mi
