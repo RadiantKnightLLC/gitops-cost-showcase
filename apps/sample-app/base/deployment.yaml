@@ -22,22 +22,19 @@ spec:
         # are added by overlays in spec.template.metadata.labels
         # This is required for Kubecost cost allocation!
     spec:
-      volumes:
-        - name: app-content
-          configMap:
-            name: sample-app-content
       containers:
         - name: sample-app
-          image: nginx:alpine
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/RadiantKnightLLC/showcase-app-p1:latest
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 80
               protocol: TCP
-          volumeMounts:
-            - name: app-content
-              mountPath: /usr/share/nginx/html
-              readOnly: true
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "80"
           resources:
             requests:
               memory: "128Mi"

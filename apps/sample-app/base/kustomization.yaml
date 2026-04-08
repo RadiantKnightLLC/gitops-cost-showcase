@@ -20,11 +20,3 @@ labels:
   pairs:
     app.kubernetes.io/managed-by: argocd
     app.kubernetes.io/part-of: gitops-finops-showcase
-
-# Generate ConfigMap with tic-tac-toe app content
-configMapGenerator:
-- name: sample-app-content
-  files:
-  - index.html
-
-

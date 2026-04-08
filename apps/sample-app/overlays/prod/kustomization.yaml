@@ -7,10 +7,7 @@ resources:
 - ../../base
 # Labels applied to all resources in this overlay
 # Images - Argo CD Image Updater will modify this via PR
-images:
-- name: ghcr.io/RadiantKnightLLC/showcase-app-p1
-  newName: nginx
-  newTag: alpine
+# Using containerized showcase-app-p1 (React Tic-Tac-Toe)
 labels:
 - includeSelectors: true
   pairs:
