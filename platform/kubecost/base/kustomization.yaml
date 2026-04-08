@@ -4,13 +4,8 @@ kind: Kustomization
 namespace: kubecost
 
 resources:
-  - namespace.yaml
-  - base
-  - budget-alerts.yaml
-  - postsync-job.yaml
+  - kubecost-rendered.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: kubecost
   app.kubernetes.io/managed-by: argocd
-  environment: platform
-  cost-center: platform-ops
