@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: sample-app
-          image: ghcr.io/RadiantKnightLLC/showcase-app-p1:latest
+          image: ghcr.io/radiantknightllc/showcase-app-p1:latest
           imagePullPolicy: Always
           ports:
             - name: http

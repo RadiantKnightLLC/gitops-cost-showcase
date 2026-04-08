@@ -13,7 +13,7 @@ commonAnnotations:
 # Format: name=newName:newTag
 images:
 - name: showcase-app-p1
-  newName: ghcr.io/RadiantKnightLLC/showcase-app-p1
+  newName: ghcr.io/radiantknightllc/showcase-app-p1
   newTag: latest
 labels:
 - includeSelectors: true
