@@ -20,11 +20,13 @@ spec:
       name: 'sample-app-{{ .path.basename }}'
       annotations:
         argocd.argoproj.io/sync-wave: "2"
-        # Image Updater: Track showcase-app-p1 image (lowercase for GHCR)
-        argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/radiantknightllc/showcase-app-p1:latest
+        # Image Updater: Track showcase-app-p1 image
+        # Format: <alias>=<full-image-path>
+        argocd-image-updater.argoproj.io/image-list: >-
+          sample-app=ghcr.io/radiantknightllc/showcase-app-p1
         # Update strategy: newest-build for latest image
         argocd-image-updater.argoproj.io/sample-app.update-strategy: newest-build
-        # Alias matching - allow any tag
+        # Allow tags pattern
         argocd-image-updater.argoproj.io/sample-app.allow-tags: "sha-*,v*"
         # Write back to Git (requires IMAGE_UPDATER_TOKEN secret)
         argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/image-updater-git-credentials
