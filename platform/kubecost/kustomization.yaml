@@ -1,16 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: kubecost
-
 resources:
   - namespace.yaml
-  - base
   - budget-alerts.yaml
-  - postsync-job.yaml
-
-commonLabels:
-  app.kubernetes.io/part-of: kubecost
-  app.kubernetes.io/managed-by: argocd
-  environment: platform
-  cost-center: platform-ops
+  # Note: kubecost-rendered.yaml is applied separately via kubectl
+  # due to Kustomize label transformation conflicts with Helm-generated labels
+  # Apply with: kubectl apply -f base/kubecost-rendered.yaml
