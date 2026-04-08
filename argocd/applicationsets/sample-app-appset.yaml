@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: sample-app
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    # Git generator - discovers environments from directory structure
+    - git:
+        repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
+        revision: master
+        directories:
+          - path: apps/sample-app/overlays/*
+  template:
+    metadata:
+      name: 'sample-app-{{ .path.basename }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+        # Image Updater annotations per environment
+        argocd-image-updater.argoproj.io/image-list: showcase-app-p1=ghcr.io/RadiantKnightLLC/showcase-app-p1
+        # Dev: Auto-promote newest build
+        # Prod: Semver with PR-based updates (manual sync policy)
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
+        targetRevision: master
+        path: '{{ .path.path }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'sample-app-{{ .path.basename }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
+  # Post-rendered patch for environment-specific sync policies
+  strategy:
+    type: RollingSync
+    rollingSync:
+      steps:
+        - matchExpressions:
+            - key: environment
+              operator: In
+              values:
+                - dev
+          maxUpdate: 100%
+        - matchExpressions:
+            - key: environment
+              operator: In
+              values:
+                - prod
+          maxUpdate: 50%

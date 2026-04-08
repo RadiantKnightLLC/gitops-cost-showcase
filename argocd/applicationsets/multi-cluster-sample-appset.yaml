@@ -1,0 +1,62 @@
+# Multi-Cluster ApplicationSet Example
+# Demonstrates hub-and-spoke pattern for GitOps-FinOps showcase
+# 
+# NOTE: Currently configured for single cluster (in-cluster)
+# To add spokes:
+#   1. Create additional EKS clusters in other regions
+#   2. Register clusters with: argocd cluster add <context>
+#   3. Update this ApplicationSet with cluster selector labels
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: sample-app-multi-cluster
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    showcase/pattern: "hub-and-spoke"
+spec:
+  goTemplate: true
+  generators:
+    # Matrix generator: combines clusters x environments
+    - matrix:
+        generators:
+          # Cluster generator - finds all registered clusters
+          - clusters:
+              selector:
+                matchExpressions:
+                  - key: environment
+                    operator: Exists
+          # Git generator - discovers environments
+          - git:
+              repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
+              revision: master
+              directories:
+                - path: apps/sample-app/overlays/{{ .metadata.labels.environment }}
+  template:
+    metadata:
+      name: 'sample-app-{{ .path.basename }}-{{ .name }}'
+      labels:
+        environment: '{{ .path.basename }}'
+        cluster: '{{ .name }}'
+        cost-center: '{{ .metadata.labels.cost-center }}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
+        targetRevision: master
+        path: '{{ .path.path }}'
+        # Kustomize with inline patches for cluster-specific values
+        kustomize:
+          commonLabels:
+            cluster: '{{ .name }}'
+            region: '{{ .metadata.labels.region }}'
+      destination:
+        name: '{{ .name }}'
+        namespace: 'sample-app-{{ .path.basename }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
