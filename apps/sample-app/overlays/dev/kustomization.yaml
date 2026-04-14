@@ -17,6 +17,11 @@ labels:
     team: platform
 patches:
 - path: labels.yaml
-- path: patches.yaml
 - path: service-patch.yaml
+- path: port-8080-patch.json
+  target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: sample-app
 
