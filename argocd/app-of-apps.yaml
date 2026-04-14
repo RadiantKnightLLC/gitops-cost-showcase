@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
-    targetRevision: main
+    targetRevision: master
     path: argocd/applications
   destination:
     server: https://kubernetes.default.svc
