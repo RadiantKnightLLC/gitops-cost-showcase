@@ -1,0 +1,91 @@
+[
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/ports",
+    "value": [
+      {
+        "name": "http",
+        "containerPort": 8080,
+        "protocol": "TCP"
+      }
+    ]
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/env",
+    "value": [
+      {
+        "name": "NODE_ENV",
+        "value": "production"
+      },
+      {
+        "name": "PORT",
+        "value": "8080"
+      }
+    ]
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/livenessProbe",
+    "value": {
+      "httpGet": {
+        "path": "/",
+        "port": 8080
+      },
+      "initialDelaySeconds": 5,
+      "periodSeconds": 10,
+      "timeoutSeconds": 5,
+      "failureThreshold": 3
+    }
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/readinessProbe",
+    "value": {
+      "httpGet": {
+        "path": "/",
+        "port": 8080
+      },
+      "initialDelaySeconds": 3,
+      "periodSeconds": 5,
+      "timeoutSeconds": 3,
+      "failureThreshold": 3
+    }
+  },
+  {
+    "op": "replace",
+    "path": "/spec/template/spec/containers/0/resources",
+    "value": {
+      "requests": {
+        "memory": "64Mi",
+        "cpu": "50m"
+      },
+      "limits": {
+        "memory": "128Mi",
+        "cpu": "100m"
+      }
+    }
+  },
+  {
+    "op": "add",
+    "path": "/spec/template/spec/containers/0/volumeMounts",
+    "value": [
+      {
+        "name": "nginx-config",
+        "mountPath": "/etc/nginx/conf.d"
+      }
+    ]
+  },
+  {
+    "op": "add",
+    "path": "/spec/template/spec/volumes",
+    "value": [
+      {
+        "name": "nginx-config",
+        "configMap": {
+          "name": "nginx-config"
+        }
+      }
+    ]
+  }
+]

@@ -4,6 +4,7 @@ namespace: sample-app-dev
 namePrefix: dev-
 resources:
 - namespace.yaml
+- nginx-config.yaml
 - ../../base
 # Labels applied to all resources in this overlay
 # Images - Argo CD Image Updater will modify this
@@ -17,4 +18,11 @@ labels:
     team: platform
 patches:
 - path: labels.yaml
+- path: service-patch.yaml
+- path: deployment-patch.json
+  target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: sample-app
 
