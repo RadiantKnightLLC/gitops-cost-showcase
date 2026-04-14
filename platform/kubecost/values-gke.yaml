@@ -1,0 +1,65 @@
+# Kubecost Helm values for GKE (Secondary Cluster)
+global:
+  clusterId: gke-dev
+
+prometheus:
+  server:
+    enabled: true
+    persistentVolume:
+      enabled: true
+      size: 32Gi
+      storageClass: "standard-rwo"
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+  nodeExporter:
+    enabled: true
+  alertmanager:
+    enabled: false
+
+kubecostModel:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+kubecostFrontend:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+kubecostProductConfigs:
+  currencyCode: "USD"
+  defaultIdle: separate
+  sharedNamespaces: "argocd,kubecost,ingress-system,monitoring"
+  labelMappingConfigs:
+    enabled: true
+    owner_label: owner
+    team_label: team
+    department_label: cost-center
+    product_label: app.kubernetes.io/part-of
+    environment_label: environment
+
+ingress:
+  enabled: false
+
+notifications:
+  alertmanager:
+    enabled: false
+
+kubecostSavings:
+  enabled: true
+
+clusterController:
+  enabled: false
