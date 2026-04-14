@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app-prod
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd-image-updater.argoproj.io/image-list: sample-app=ghcr.io/radiantknightllc/showcase-app-p1:latest
+    argocd-image-updater.argoproj.io/sample-app.update-strategy: newest-build
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/image-updater-git-credentials
+    argocd-image-updater.argoproj.io/git-branch: master
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
+    targetRevision: master
+    path: apps/sample-app/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sample-app-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
