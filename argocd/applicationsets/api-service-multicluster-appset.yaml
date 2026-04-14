@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: api-service-multicluster
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    showcase/pattern: "hub-and-spoke"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            environment: dev
+            workload-type: general
+  template:
+    metadata:
+      name: '{{ .name }}-api-service-dev'
+      labels:
+        environment: dev
+        provider: '{{ .metadata.labels.provider }}'
+        region: '{{ .metadata.labels.region }}'
+        cost-center: '{{ index .metadata.labels "cost-center" }}'
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/RadiantKnightLLC/gitops-cost-showcase.git
+        targetRevision: master
+        path: apps/api-service/overlays/dev
+        kustomize:
+          commonLabels:
+            cluster: '{{ .name }}'
+            provider: '{{ .metadata.labels.provider }}'
+      destination:
+        name: '{{ .name }}'
+        namespace: api-service-dev
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
