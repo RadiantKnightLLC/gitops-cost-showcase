@@ -8,8 +8,30 @@ spec:
     spec:
       containers:
         - name: sample-app
-          securityContext:
-            runAsUser: 0
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "8080"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
           resources:
             requests:
               memory: "64Mi"   # Lower for dev

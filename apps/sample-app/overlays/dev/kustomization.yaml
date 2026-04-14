@@ -18,4 +18,5 @@ labels:
 patches:
 - path: labels.yaml
 - path: patches.yaml
+- path: service-patch.yaml
 
